@@ -1,85 +1,81 @@
 <template>
-  <section class="grid">
-    <div class="card p">
-      <h1 class="h">Log in</h1>
-      <p class="sub">A simple page used by the navigation guard for Settings.</p>
-
-      <form class="form" @submit.prevent="submit">
-        <label class="field">
-          <span class="label">Your name</span>
-          <input class="input" v-model="name" type="text" placeholder="e.g., Alex" />
-          <span v-if="err" class="err">{{ err }}</span>
-        </label>
-
-        <button class="btn ok" type="submit">Log in</button>
+    <PageHeader title="Login" subtitle="Access Settings (route guard enabled)." />
+  
+    <div style="height: 14px;"></div>
+  
+    <div class="card" style="padding: 14px; max-width: 520px;">
+      <form @submit.prevent="submit" class="grid">
+        <div>
+          <label style="font-size:13px; color: var(--muted);">Email</label>
+          <input class="input" v-model="form.email" placeholder="name@example.com" />
+          <div v-if="errors.email" style="color: var(--bad); margin-top: 6px; font-size: 13px;">
+            {{ errors.email }}
+          </div>
+        </div>
+  
+        <div>
+          <label style="font-size:13px; color: var(--muted);">Password</label>
+          <input class="input" type="password" v-model="form.password" placeholder="at least 6 characters" />
+          <div v-if="errors.password" style="color: var(--bad); margin-top: 6px; font-size: 13px;">
+            {{ errors.password }}
+          </div>
+        </div>
+  
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+          <RouterLink class="btn" to="/">Cancel</RouterLink>
+          <button class="btn primary" type="submit">Login</button>
+        </div>
+  
+        <div v-if="errors.form" style="color: var(--bad); font-size: 13px;">
+          {{ errors.form }}
+        </div>
       </form>
     </div>
-
-    <div class="card p tip">
-      <h2 class="h2">Why this exists</h2>
-      <p class="sub">
-        The course requirements include a basic navigation guard. Settings routes require a session.
-      </p>
-    </div>
-  </section>
-</template>
-
-<script setup>
-import { ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useUserStore } from '../stores/user'
-
-const route = useRoute()
-const router = useRouter()
-const user = useUserStore()
-
-const name = ref('')
-const err = ref('')
-
-function submit() {
-  if (name.value.trim().length < 2) {
-    err.value = 'Name must be at least 2 characters.'
-    return
-  }
-  err.value = ''
-  user.login(name.value)
-  const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/settings'
-  router.push(redirect)
-}
-</script>
-
-<style scoped>
-.grid{ display:grid; gap: 12px; grid-template-columns: 1.1fr 0.9fr; }
-.p{ padding: 18px; }
-.h{ margin:0; font-size: 22px; }
-.h2{ margin:0; font-size: 18px; }
-.sub{ margin: 10px 0 0; color: var(--muted); line-height: 1.55; }
-.form{ margin-top: 14px; display:grid; gap: 12px; }
-.field{ display:flex; flex-direction: column; gap: 6px; }
-.label{ font-size: 12px; color: var(--muted); }
-.input{
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid var(--line);
-  background: color-mix(in srgb, var(--panel), transparent 0%);
-  color: var(--text);
-  outline: none;
-}
-.input:focus{ border-color: color-mix(in srgb, var(--accent), transparent 55%); }
-.err{ color: var(--danger); font-size: 12px; }
-.btn{
-  height: 42px;
-  padding: 0 14px;
-  border-radius: 12px;
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--text);
-  cursor: pointer;
-}
-.btn.ok{ border-color: color-mix(in srgb, var(--ok), transparent 55%); }
-.btn:hover{ border-color: color-mix(in srgb, var(--accent), transparent 55%); }
-.tip{ align-self: start; }
-@media (max-width: 900px){
-  .grid{ grid-template-columns: 1fr; }
-}
-</style>
+  </template>
+  
+  <script setup>
+  import { reactive } from "vue";
+  import { useRoute, useRouter } from "vue-router";
+  import { useSessionStore } from "../stores/session";
+  import PageHeader from "../components/PageHeader.vue";
+  
+  const route = useRoute();
+  const router = useRouter();
+  const session = useSessionStore();
+  
+  const form = reactive({
+    email: "",
+    password: ""
+  });
+  
+  const errors = reactive({
+    email: "",
+    password: "",
+    form: ""
+  });
+  
+  const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+  
+  const submit = () => {
+    errors.email = "";
+    errors.password = "";
+    errors.form = "";
+  
+    const email = String(form.email || "").trim();
+    const password = String(form.password || "");
+  
+    if (!email) errors.email = "Email is required.";
+    else if (!isEmail(email)) errors.email = "Enter a valid email.";
+  
+    if (!password) errors.password = "Password is required.";
+    else if (password.length < 6) errors.password = "Password must be at least 6 characters.";
+  
+    if (errors.email || errors.password) return;
+  
+    session.login(email);
+  
+    const redirect = String(route.query.redirect || "/settings");
+    router.push(redirect);
+  };
+  </script>
+  

@@ -1,84 +1,102 @@
-import { computed, reactive } from 'vue'
-import { defineStore } from 'pinia'
-import { useLocalStorageJson } from '../composables/useLocalStorage'
+import { defineStore } from "pinia";
+import { nanoid } from "nanoid";
 
-function makeId() {
-  return Math.random().toString(16).slice(2) + Date.now().toString(16)
-}
+const STORAGE_KEY = "task-tracker.tasks.v1";
 
-export const useTasksStore = defineStore('tasks', () => {
-  const tasks = useLocalStorageJson('tm_tasks', [
-    { id: 't1', title: 'Finish Vue course project', details: 'Add router, Pinia, API request, and tests', done: false, priority: 'high', due: '' },
-    { id: 't2', title: 'Review Composition API', details: 'Practice ref/reactive/computed/watch', done: true, priority: 'medium', due: '' }
-  ])
+export const useTasksStore = defineStore("tasks", {
+  state: () => ({
+    tasks: [],
+    showCompleted: true
+  }),
+  getters: {
+    total: (s) => s.tasks.length,
+    completedCount: (s) => s.tasks.filter(t => t.completed).length,
+    pendingCount: (s) => s.tasks.filter(t => !t.completed).length,
+    byId: (s) => (id) => s.tasks.find(t => t.id === id)
+  },
+  actions: {
+    addTask(payload) {
+      const title = String(payload?.title ?? "").trim();
+      if (!title) return false;
 
-  const ui = reactive({
-    query: '',
-    status: 'all',
-    priority: 'all',
-    sort: 'recent'
-  })
+      const task = {
+        id: nanoid(),
+        title,
+        notes: String(payload?.notes ?? "").trim(),
+        dueDate: payload?.dueDate || "",
+        priority: payload?.priority || "normal",
+        tags: Array.isArray(payload?.tags) ? payload.tags : [],
+        completed: false,
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      };
 
-  const total = computed(() => tasks.value.length)
-  const completed = computed(() => tasks.value.filter(t => t.done).length)
-  const active = computed(() => total.value - completed.value)
+      this.tasks.unshift(task);
+      return task.id;
+    },
+    toggleTask(id) {
+      const t = this.byId(id);
+      if (!t) return;
+      t.completed = !t.completed;
+      t.updatedAt = Date.now();
+    },
+    updateTask(id, patch) {
+      const t = this.byId(id);
+      if (!t) return false;
 
-  const filtered = computed(() => {
-    const q = ui.query.trim().toLowerCase()
-    let list = tasks.value.slice()
+      const nextTitle = patch?.title != null ? String(patch.title).trim() : t.title;
+      if (!nextTitle) return false;
 
-    if (q) {
-      list = list.filter(t => (t.title + ' ' + t.details).toLowerCase().includes(q))
+      t.title = nextTitle;
+      t.notes = patch?.notes != null ? String(patch.notes).trim() : t.notes;
+      t.dueDate = patch?.dueDate != null ? patch.dueDate : t.dueDate;
+      t.priority = patch?.priority != null ? patch.priority : t.priority;
+      t.tags = patch?.tags != null ? patch.tags : t.tags;
+      t.updatedAt = Date.now();
+      return true;
+    },
+    removeTask(id) {
+      this.tasks = this.tasks.filter(t => t.id !== id);
+    },
+    clearCompleted() {
+      this.tasks = this.tasks.filter(t => !t.completed);
+    },
+    importTemplate(todo) {
+      const title = String(todo?.title ?? "").trim();
+      if (!title) return false;
+
+      const id = nanoid();
+      this.tasks.unshift({
+        id,
+        title,
+        notes: "Imported from templates",
+        dueDate: "",
+        priority: todo?.completed ? "low" : "normal",
+        tags: ["template"],
+        completed: !!todo?.completed,
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      });
+      return id;
+    },
+    setShowCompleted(v) {
+      this.showCompleted = !!v;
+    },
+    persist() {
+      const payload = JSON.stringify({ tasks: this.tasks, showCompleted: this.showCompleted });
+      localStorage.setItem(STORAGE_KEY, payload);
+    },
+    hydrate() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      try {
+        const parsed = JSON.parse(raw);
+        this.tasks = Array.isArray(parsed?.tasks) ? parsed.tasks : [];
+        this.showCompleted = parsed?.showCompleted !== false;
+      } catch {
+        this.tasks = [];
+        this.showCompleted = true;
+      }
     }
-    if (ui.status === 'active') list = list.filter(t => !t.done)
-    if (ui.status === 'done') list = list.filter(t => t.done)
-    if (ui.priority !== 'all') list = list.filter(t => t.priority === ui.priority)
-
-    if (ui.sort === 'alpha') list.sort((a, b) => a.title.localeCompare(b.title))
-    if (ui.sort === 'priority') {
-      const rank = { high: 0, medium: 1, low: 2 }
-      list.sort((a, b) => (rank[a.priority] ?? 9) - (rank[b.priority] ?? 9))
-    }
-    if (ui.sort === 'recent') list.sort((a, b) => String(b.id).localeCompare(String(a.id)))
-    return list
-  })
-
-  const getById = computed(() => (id) => tasks.value.find(t => t.id === id))
-
-  function addTask(payload) {
-    const task = {
-      id: makeId(),
-      title: payload.title.trim(),
-      details: payload.details.trim(),
-      done: false,
-      priority: payload.priority,
-      due: payload.due || ''
-    }
-    tasks.value = [task, ...tasks.value]
   }
-
-  function toggleTask(id) {
-    tasks.value = tasks.value.map(t => t.id === id ? { ...t, done: !t.done } : t)
-  }
-
-  function removeTask(id) {
-    tasks.value = tasks.value.filter(t => t.id !== id)
-  }
-
-  function updateTask(id, patch) {
-    tasks.value = tasks.value.map(t => t.id === id ? { ...t, ...patch } : t)
-  }
-
-  function setQuery(v) { ui.query = v }
-  function setStatus(v) { ui.status = v }
-  function setPriority(v) { ui.priority = v }
-  function setSort(v) { ui.sort = v }
-
-  return {
-    tasks, ui,
-    total, completed, active,
-    filtered, getById,
-    addTask, toggleTask, removeTask, updateTask,
-    setQuery, setStatus, setPriority, setSort
-  }
-})
+});

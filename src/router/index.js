@@ -1,40 +1,27 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import { useUserStore } from '../stores/user'
+import { createRouter, createWebHistory } from "vue-router";
 
 const routes = [
-  { path: '/', name: 'home', component: () => import('../pages/HomePage.vue') },
-  { path: '/tasks', name: 'tasks', component: () => import('../pages/TasksPage.vue') },
-  { path: '/tasks/:id', name: 'task-details', component: () => import('../pages/TaskDetailsPage.vue'), props: true },
-  { path: '/about', name: 'about', component: () => import('../pages/AboutPage.vue') },
-
+  { path: "/", name: "home", component: () => import("../pages/HomePage.vue") },
   {
-    path: '/settings',
-    component: () => import('../pages/settings/SettingsLayout.vue'),
-    meta: { requiresAuth: true },
+    path: "/tasks",
+    component: () => import("../pages/TasksLayout.vue"),
     children: [
-      { path: '', redirect: { name: 'settings-profile' } },
-      { path: 'profile', name: 'settings-profile', component: () => import('../pages/settings/ProfileSettings.vue') },
-      { path: 'preferences', name: 'settings-preferences', component: () => import('../pages/settings/PreferencesSettings.vue') }
+      { path: "", name: "tasks", component: () => import("../pages/TasksPage.vue") },
+      { path: ":id", name: "task-detail", component: () => import("../pages/TaskDetailPage.vue") }
     ]
   },
+  { path: "/explore", name: "explore", component: () => import("../pages/ExplorePage.vue") },
+  { path: "/login", name: "login", component: () => import("../pages/LoginPage.vue") },
+  {
+    path: "/settings",
+    name: "settings",
+    meta: { requiresAuth: true },
+    component: () => import("../pages/SettingsPage.vue")
+  },
+  { path: "/:pathMatch(.*)*", name: "not-found", component: () => import("../pages/NotFoundPage.vue") }
+];
 
-  { path: '/login', name: 'login', component: () => import('../pages/LoginPage.vue') },
-  { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('../pages/NotFoundPage.vue') }
-]
-
-const router = createRouter({
+export default createRouter({
   history: createWebHistory(),
-  routes,
-  scrollBehavior() {
-    return { top: 0 }
-  }
-})
-
-router.beforeEach((to) => {
-  const user = useUserStore()
-  if (to.meta.requiresAuth && !user.isLoggedIn) {
-    return { name: 'login', query: { redirect: to.fullPath } }
-  }
-})
-
-export default router
+  routes
+});

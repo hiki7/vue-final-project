@@ -1,9 +1,14 @@
 <template>
-  <AppShell>
+  <div :class="['container', { compact: session.compactMode }]">
+    <NavBar />
+    <div style="height: 14px;"></div>
     <router-view />
-  </AppShell>
+  </div>
 </template>
 
 <script setup>
-import AppShell from './components/layout/AppShell.vue'
+import NavBar from "./components/NavBar.vue";
+import { useSessionStore } from "./stores/session";
+
+const session = useSessionStore();
 </script>

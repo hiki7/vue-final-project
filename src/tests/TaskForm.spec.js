@@ -1,20 +1,23 @@
-import { describe, it, expect } from 'vitest'
-import { mount } from '@vue/test-utils'
-import TaskForm from '../components/tasks/TaskForm.vue'
+import { describe, it, expect } from "vitest";
+import { mount } from "@vue/test-utils";
+import TaskForm from "../components/TaskForm.vue";
 
-describe('TaskForm', () => {
-  it('disables submit when invalid and emits create when valid', async () => {
-    const wrapper = mount(TaskForm)
+describe("TaskForm", () => {
+  it("shows validation error for empty title", async () => {
+    const w = mount(TaskForm);
+    await w.find("form").trigger("submit");
+    expect(w.text()).toContain("Title is required.");
+  });
 
-    const button = wrapper.get('button[type="submit"]')
-    expect(button.attributes('disabled')).toBeDefined()
+  it("emits add with payload when valid", async () => {
+    const w = mount(TaskForm);
 
-    await wrapper.get('input[type="text"]').setValue('ABC')
-    await wrapper.get('textarea').setValue('Hello there')
-    expect(wrapper.get('button[type="submit"]').attributes('disabled')).toBeUndefined()
+    const inputs = w.findAll("input");
+    await inputs[0].setValue("Buy milk");
+    await w.find("form").trigger("submit");
 
-    await wrapper.get('form').trigger('submit')
-    expect(wrapper.emitted('create')).toBeTruthy()
-    expect(wrapper.emitted('create')[0][0].title).toBe('ABC')
-  })
-})
+    const emitted = w.emitted("add");
+    expect(emitted).toBeTruthy();
+    expect(emitted[0][0].title).toBe("Buy milk");
+  });
+});

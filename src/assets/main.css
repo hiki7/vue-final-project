@@ -1,0 +1,155 @@
+:root {
+    color-scheme: light;
+    --bg: #0b1220;
+    --card: rgba(255, 255, 255, 0.06);
+    --card-2: rgba(255, 255, 255, 0.08);
+    --text: rgba(255, 255, 255, 0.92);
+    --muted: rgba(255, 255, 255, 0.68);
+    --line: rgba(255, 255, 255, 0.12);
+    --ok: #2dd4bf;
+    --warn: #fbbf24;
+    --bad: #fb7185;
+    --accent: #60a5fa;
+  }
+  
+  * { box-sizing: border-box; }
+  
+  html, body, #app {
+    height: 100%;
+    min-height: 100%;
+  }
+  
+  html {
+    background: var(--bg);
+  }
+  
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    color: var(--text);
+  
+    background:
+      radial-gradient(1200px 600px at 20% 0%, rgba(96,165,250,.18), transparent 60%),
+      radial-gradient(900px 500px at 90% 10%, rgba(45,212,191,.12), transparent 60%),
+      var(--bg);
+  
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+  }
+  
+  a { color: inherit; text-decoration: none; }
+  
+  .container {
+    max-width: 1050px;
+    margin: 0 auto;
+    padding: 18px;
+  }
+  
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+  }
+  
+  .btn {
+    border: 1px solid var(--line);
+    background: var(--card-2);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform .12s ease, background .12s ease, border-color .12s ease;
+    user-select: none;
+  }
+  
+  .btn:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+  }
+  
+  .btn:hover { transform: translateY(-1px); border-color: rgba(255,255,255,.2); }
+  .btn.primary { background: rgba(96,165,250,.16); border-color: rgba(96,165,250,.32); }
+  .btn.danger { background: rgba(251,113,133,.14); border-color: rgba(251,113,133,.28); }
+  
+  .input, select, textarea {
+    width: 100%;
+    background: rgba(0,0,0,.18);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 12px;
+    outline: none;
+  }
+  
+  .input:focus, select:focus, textarea:focus {
+    border-color: rgba(96,165,250,.55);
+  }
+  
+  .grid {
+    display: grid;
+    gap: 14px;
+  }
+  
+  .grid.cols-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  @media (min-width: 860px) {
+    .grid.cols-2 { grid-template-columns: 1.35fr .65fr; }
+  }
+  
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--line);
+    padding: 7px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.05);
+    color: var(--muted);
+    font-size: 13px;
+  }
+  
+  hr.sep {
+    border: none;
+    border-top: 1px solid var(--line);
+    margin: 14px 0;
+  }
+  
+  /* Compact mode (when .container has class "compact") */
+  .container.compact {
+    padding: 12px;
+  }
+  
+  .container.compact .grid {
+    gap: 10px;
+  }
+  
+  .container.compact .card {
+    border-radius: 14px;
+  }
+  
+  .container.compact .btn {
+    padding: 8px 10px;
+    border-radius: 10px;
+  }
+  
+  .container.compact .input,
+  .container.compact select,
+  .container.compact textarea {
+    padding: 8px 10px;
+    border-radius: 10px;
+  }
+  
+  .container.compact .badge {
+    padding: 6px 9px;
+    font-size: 12px;
+  }
+  
+  .container.compact hr.sep {
+    margin: 10px 0;
+  }
+  

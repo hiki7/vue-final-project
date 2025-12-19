@@ -1,37 +1,22 @@
-import { describe, it, expect } from 'vitest'
-import { mount } from '@vue/test-utils'
-import { createRouter, createMemoryHistory } from 'vue-router'
-import TaskItem from '../components/tasks/TaskItem.vue'
+import { describe, it, expect } from "vitest";
+import { mount } from "@vue/test-utils";
+import { createPinia, setActivePinia } from "pinia";
+import TaskItem from "../components/TaskItem.vue";
 
-const router = createRouter({
-  history: createMemoryHistory(),
-  routes: [{ path: '/tasks/:id', component: { template: '<div />' } }]
-})
+describe("TaskItem", () => {
+  it("emits toggle on checkbox change", async () => {
+    setActivePinia(createPinia());
+    const task = { id: "1", title: "X", completed: false, dueDate: "", tags: [] };
+    const w = mount(TaskItem, { props: { task } });
+    await w.find('input[type="checkbox"]').trigger("change");
+    expect(w.emitted("toggle")).toBeTruthy();
+    expect(w.emitted("toggle")[0]).toEqual(["1"]);
+  });
 
-describe('TaskItem', () => {
-  it('renders title and emits toggle', async () => {
-    router.push('/tasks/abc123')
-    await router.isReady()
-    const wrapper = mount(TaskItem, {
-      global: { plugins: [router] },
-      props: {
-        task: { id: 'abc123', title: 'My Task', details: 'Hello world', done: false, priority: 'medium', due: '' }
-      }
-    })
-
-    expect(wrapper.text()).toContain('My Task')
-
-    await wrapper.get('button.check').trigger('click')
-    expect(wrapper.emitted('toggle')).toBeTruthy()
-  })
-
-  it('applies done class', () => {
-    const wrapper = mount(TaskItem, {
-      global: { plugins: [router] },
-      props: {
-        task: { id: 'abc123', title: 'Done Task', details: 'Ok', done: true, priority: 'low', due: '' }
-      }
-    })
-    expect(wrapper.classes()).toContain('done')
-  })
-})
+  it("applies done class when completed", () => {
+    setActivePinia(createPinia());
+    const task = { id: "1", title: "X", completed: true, dueDate: "", tags: [] };
+    const w = mount(TaskItem, { props: { task } });
+    expect(w.classes()).toContain("done");
+  });
+});
